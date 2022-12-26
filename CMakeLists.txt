@@ -1,28 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(KF_VERSION "5.86.0") # handled by release scripts
-set(KF_DEP_VERSION "5.86.0") # handled by release scripts
+set(KF_VERSION "5.90.0") # handled by release scripts
+set(KF_DEP_VERSION "5.90.0") # handled by release scripts
 project(KNotifyConfig VERSION ${KF_VERSION})
 
 # Dependencies
 include(FeatureSummary)
-find_package(ECM 5.86.0  NO_MODULE)
+find_package(ECM 5.90.0  NO_MODULE)
 set_package_properties(ECM PROPERTIES TYPE REQUIRED DESCRIPTION "Extra CMake Modules." URL "https://commits.kde.org/extra-cmake-modules")
 feature_summary(WHAT REQUIRED_PACKAGES_NOT_FOUND FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 set(REQUIRED_QT_VERSION 5.15.2)
+include(KDEInstallDirs)
 
-# Required Qt5 components to build this framework
-find_package(Qt5 ${REQUIRED_QT_VERSION} NO_MODULE REQUIRED Widgets DBus)
+# Required Qt components to build this framework
+find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} NO_MODULE REQUIRED Widgets DBus)
+
 find_package(Qt5 ${REQUIRED_QT_VERSION} QUIET OPTIONAL_COMPONENTS TextToSpeech)
-if (NOT Qt5TextToSpeech_FOUND)
+if (NOT TARGET Qt5::TextToSpeech)
   message(STATUS "Qt5TextToSpeech not found, speech features will be disabled")
 else()
   add_definitions(-DHAVE_SPEECH)
 endif()
-include(KDEInstallDirs)
 include(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
 include(KDECMakeSettings)
 include(KDEGitCommitHooks)
@@ -64,7 +65,7 @@ ecm_setup_version(
 option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)" OFF)
 add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050f02)
-add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055100)
+add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055900)
 # Subdirectories
 add_definitions(-DTRANSLATION_DOMAIN=\"knotifyconfig5\")
 ki18n_install(po)
@@ -108,7 +109,7 @@ install(EXPORT
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/knotifyconfig_version.h"
-  DESTINATION "${KDE_INSTALL_INCLUDEDIR_KF5}"
+  DESTINATION "${KDE_INSTALL_INCLUDEDIR_KF}"
   COMPONENT Devel
 )
 
