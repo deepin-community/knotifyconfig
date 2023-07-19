@@ -1,32 +1,41 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(KF_VERSION "5.90.0") # handled by release scripts
-set(KF_DEP_VERSION "5.90.0") # handled by release scripts
+set(KF_VERSION "5.103.0") # handled by release scripts
+set(KF_DEP_VERSION "5.103.0") # handled by release scripts
 project(KNotifyConfig VERSION ${KF_VERSION})
 
 # Dependencies
 include(FeatureSummary)
-find_package(ECM 5.90.0  NO_MODULE)
+find_package(ECM 5.103.0  NO_MODULE)
 set_package_properties(ECM PROPERTIES TYPE REQUIRED DESCRIPTION "Extra CMake Modules." URL "https://commits.kde.org/extra-cmake-modules")
 feature_summary(WHAT REQUIRED_PACKAGES_NOT_FOUND FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
-set(REQUIRED_QT_VERSION 5.15.2)
+# Includes
 include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
+
+include(GenerateExportHeader)
+include(ECMSetupVersion)
+include(ECMGenerateHeaders)
+include(ECMQtDeclareLoggingCategory)
+include(ECMAddQch)
+include(CMakePackageConfigHelpers)
+include(KDEGitCommitHooks)
+include(ECMDeprecationSettings)
 
 # Required Qt components to build this framework
+set(REQUIRED_QT_VERSION 5.15.2)
 find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} NO_MODULE REQUIRED Widgets DBus)
 
-find_package(Qt5 ${REQUIRED_QT_VERSION} QUIET OPTIONAL_COMPONENTS TextToSpeech)
-if (NOT TARGET Qt5::TextToSpeech)
+find_package(Qt${QT_MAJOR_VERSION}TextToSpeech ${REQUIRED_QT_VERSION} CONFIG)
+if (NOT TARGET Qt${QT_MAJOR_VERSION}::TextToSpeech)
   message(STATUS "Qt5TextToSpeech not found, speech features will be disabled")
 else()
   add_definitions(-DHAVE_SPEECH)
 endif()
-include(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
-include(KDECMakeSettings)
-include(KDEGitCommitHooks)
 
 find_package(KF5Completion ${KF_DEP_VERSION} REQUIRED)
 find_package(KF5Config ${KF_DEP_VERSION} REQUIRED)
@@ -39,20 +48,11 @@ set_package_properties(Canberra PROPERTIES
     TYPE OPTIONAL)
 if (NOT Canberra_FOUND)
     # This is REQUIRED since you cannot tell CMake "either one of those two optional ones are required"
-    find_package(Phonon4Qt5 4.6.60 NO_MODULE REQUIRED)
-    set_package_properties(Phonon4Qt5 PROPERTIES
+    find_package(Phonon4Qt${QT_MAJOR_VERSION} 4.6.60 NO_MODULE REQUIRED)
+    set_package_properties(Phonon4Qt${QT_MAJOR_VERSION} PROPERTIES
         DESCRIPTION "Qt-based audio library"
         PURPOSE "Needed to preview notification sounds when Canberra isn't available")
 endif()
-
-# Includes
-
-include(GenerateExportHeader)
-include(ECMSetupVersion)
-include(ECMGenerateHeaders)
-include(ECMQtDeclareLoggingCategory)
-include(ECMAddQch)
-include(CMakePackageConfigHelpers)
 
 # ECM setup
 ecm_setup_version(
@@ -64,8 +64,12 @@ ecm_setup_version(
 
 option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)" OFF)
 add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
-add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050f02)
-add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055900)
+
+ecm_set_disabled_deprecation_versions(
+    QT 5.15.2
+    KF 5.95
+)
+
 # Subdirectories
 add_definitions(-DTRANSLATION_DOMAIN=\"knotifyconfig5\")
 ki18n_install(po)
@@ -109,7 +113,7 @@ install(EXPORT
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/knotifyconfig_version.h"
-  DESTINATION "${KDE_INSTALL_INCLUDEDIR_KF}"
+  DESTINATION "${KDE_INSTALL_INCLUDEDIR_KF}/KNotifyConfig"
   COMPONENT Devel
 )
 
