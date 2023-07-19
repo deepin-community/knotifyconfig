@@ -14,9 +14,9 @@
 #include <QStandardPaths>
 #include <QUrl>
 
-#if defined(HAVE_CANBERRA)
+#if HAVE_CANBERRA
 #include <canberra.h>
-#elif defined(HAVE_PHONON)
+#elif HAVE_PHONON
 #include <phonon/mediaobject.h>
 #endif
 
@@ -50,6 +50,7 @@ KNotifyConfigActionsWidget::KNotifyConfigActionsWidget(QWidget *parent)
     connect(m_ui.Sound_select, SIGNAL(textChanged(QString)), this, SIGNAL(changed()));
     connect(m_ui.Logfile_select, SIGNAL(textChanged(QString)), this, SIGNAL(changed()));
     connect(m_ui.Sound_play, SIGNAL(clicked()), this, SLOT(slotPlay()));
+    connect(m_ui.TTS_select, SIGNAL(textChanged(QString)), this, SIGNAL(changed()));
     connect(m_ui.TTS_combo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotTTSComboChanged()));
     m_ui.TTS_combo->setEnabled(false);
     if (!KNotifyConfigElement::have_tts()) {
@@ -61,7 +62,7 @@ KNotifyConfigActionsWidget::KNotifyConfigActionsWidget(QWidget *parent)
 
 KNotifyConfigActionsWidget::~KNotifyConfigActionsWidget()
 {
-#if defined(HAVE_CANBERRA)
+#if HAVE_CANBERRA
     if (m_context) {
         ca_context_destroy(m_context);
     }
@@ -152,7 +153,7 @@ void KNotifyConfigActionsWidget::slotPlay()
         soundURL.clear();
     }
 
-#if defined(HAVE_CANBERRA)
+#if HAVE_CANBERRA
     if (!m_context) {
         int ret = ca_context_create(&m_context);
         if (ret != CA_SUCCESS) {
@@ -196,7 +197,7 @@ void KNotifyConfigActionsWidget::slotPlay()
         qCWarning(KNOTIFYCONFIG_LOG) << "Failed to play sound with canberra:" << ca_strerror(ret);
         return;
     }
-#elif defined(HAVE_PHONON)
+#elif HAVE_PHONON
     Phonon::MediaObject *media = Phonon::createPlayer(Phonon::NotificationCategory, soundURL);
     media->play();
     connect(media, SIGNAL(finished()), media, SLOT(deleteLater()));
